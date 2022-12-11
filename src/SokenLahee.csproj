@@ -1,0 +1,76 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Authors>Dreanor</Authors>
+        <Company>Dreanor</Company>
+        <Version>1.0.1.0</Version>
+        <Description>Plays Soken's legendary performance of Lahee whenever you visit The Rak'tika Greatwood</Description>
+        <Copyright>(c) 2022 Dreanor</Copyright>
+        <PackageProjectUrl>https://github.com/DreanorFFXIV/SokenLahee</PackageProjectUrl>
+        <TargetFramework>net6.0-windows</TargetFramework>
+        <LangVersion>9.0</LangVersion>
+		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+		<PackageVersion>1.0.0.0</PackageVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+        
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants>TRACE,DEBUG</DefineConstants>
+    </PropertyGroup>
+
+	<PropertyGroup>
+		<DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+	</PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DalamudPackager" Version="2.1.8" />
+        <PackageReference Include="NAudio" Version="2.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Dalamud">
+            <HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="FFXIVClientStructs">
+            <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="ImGui.NET">
+            <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="ImGuiScene">
+            <HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Lumina">
+            <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Lumina.Excel">
+            <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Newtonsoft.Json">
+            <HintPath>$(DalamudLibPath)Newtonsoft.Json.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="soken.wav">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>
