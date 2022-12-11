@@ -14,7 +14,6 @@ namespace SokenLahee
 {
     public class Plugin : IDalamudPlugin
     {
-
         public string Name => "SokenLahee";
 
         [PluginService] 
@@ -23,21 +22,38 @@ namespace SokenLahee
         [PluginService] 
         private SigScanner _sigScanner { get; set; }
         
+        [PluginService] 
+        private DalamudPluginInterface _pluginInterface { get; set; }
+        
         private readonly byte[] _soundBytes;
-        private WaveOutEvent _soundPlayer;
-        private uint _originalBgmVolume;
-        private readonly VolumeControls _vc;      
+        private readonly WaveOutEvent _soundPlayer;
+        private readonly VolumeControls _volumeControls;      
+        private readonly PluginUI _pluginUI;
         private ushort _lastTerritory;
 
         public Plugin()
         {
             _soundPlayer = new WaveOutEvent();
             
-            _vc = new VolumeControls(_sigScanner, null);
+            _volumeControls = new VolumeControls(_sigScanner, null);
+            _pluginUI = new PluginUI(_volumeControls);
+            _pluginInterface.UiBuilder.Draw += _pluginUI.Draw;
             
             var _localDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             _soundBytes = File.ReadAllBytes(Path.Combine(_localDir, "soken.wav"));
             _clientState.TerritoryChanged += OnTerritoryChanged;
+
+            try
+            {
+                if (_volumeControls.BgmMuted == null)
+                {
+                    _pluginUI.IsVisible = true;
+                }
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
         }
 
         public void Dispose()
@@ -46,39 +62,47 @@ namespace SokenLahee
             _soundPlayer.Stop();
             _soundPlayer.Dispose();
             _clientState.TerritoryChanged -= OnTerritoryChanged;
+            _pluginInterface.UiBuilder.Draw -= _pluginUI.Draw;
+            _volumeControls.Dispose();
         }
 
         private void OnTerritoryChanged(object sender, ushort territory)
         {
-            PluginLog.Log("lt:" + _lastTerritory);
-            if (_lastTerritory == 817)
+            try
             {
-                UnmuteBgm();
-                _soundPlayer.Pause();
-                _soundPlayer.Stop();
-            }
-            
-            if (territory == 817) //817 is Rak'tika
-            {
-                var volume = GetSfxVolume();
-                if (volume > 0)
+                if (_lastTerritory == 817)
                 {
-                    MuteBgm();
-                    PlaySong(volume);
+                    UnmuteBgm();
+                    _soundPlayer.Pause();
+                    _soundPlayer.Stop();
                 }
+
+                if (territory == 817) //817 is Rak'tika
+                {
+                    var volume = GetSfxVolume();
+                    if (volume > 0)
+                    {
+                        MuteBgm();
+                        PlaySong(volume);
+                    }
+                }
+
+                _lastTerritory = territory;
             }
-            
-            _lastTerritory = territory;
+            catch (Exception e)
+            {
+                _pluginUI.IsVisible = true;
+            }
         }
 
         private void UnmuteBgm()
         {
-            VolumeControls.ToggleVolume(_vc.BgmMuted, OperationKind.Unmute);
+            VolumeControls.ToggleVolume(_volumeControls.BgmMuted, OperationKind.Unmute);
         }
 
         private void MuteBgm()
         {
-            VolumeControls.ToggleVolume(_vc.BgmMuted, OperationKind.Mute);
+            VolumeControls.ToggleVolume(_volumeControls.BgmMuted, OperationKind.Mute);
         }
 
         private void PlaySong(float volume)
@@ -90,7 +114,6 @@ namespace SokenLahee
             _soundPlayer.Init(volumeStream);
             _soundPlayer.PlaybackStopped += (snd, evn) =>
             {
-                PluginLog.Log("state:" + _clientState.TerritoryType );
                 if (_clientState.TerritoryType == 817)
                 {
                     PlaySong(volume);
@@ -118,12 +141,7 @@ namespace SokenLahee
                     if (entry.Name != null)
                     {
                         var name = MemoryHelper.ReadStringNullTerminated(new IntPtr(entry.Name));
-
-                        if (name == "IsSndBgm")
-                        {
-                            _originalBgmVolume = entry.Value.UInt;
-                        }
-                        
+          
                         if (name == "IsSndSe")
                         {
                             var value = entry.Value.UInt;
